@@ -1,30 +1,24 @@
-# TextWorld Inform7 cache
+# TextWorld Linux wheel cache
 
-This repository caches the Inform7 CLI archive needed by TextWorld's
-`setup.sh`.
-
-TextWorld downloads this file during source installation:
-
-```text
-http://emshort.com/inform-app-archive/6M62/I7_6M62_Linux_all.tar.gz
-```
-
-If a machine cannot access `emshort.com`, install TextWorld from source after
-pre-seeding the archive into `textworld/thirdparty/`.
+This repository caches the TextWorld Python package wheel for offline Linux
+installation.
 
 ## Files
 
 ```text
-vendor/textworld/I7_6M62_Linux_all.tar.gz
+vendor/textworld/textworld-1.7.0-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 ```
 
 SHA256:
 
 ```text
-684e33d37e6fd21a1822233ddf35937f3a365c4a366486a113c5f32015d93cbd
+ca7486cff540c4d90865c54a3465e948c2790357aa78ad64de4406387854cbc8
 ```
 
-## Install TextWorld for ALFWorld
+The wheel is the TextWorld 1.7.0 Linux x86_64 prebuilt package from PyPI. It
+requires Python 3.9 or newer.
+
+## Offline install
 
 On the target Linux machine:
 
@@ -34,26 +28,18 @@ cd verl-temp
 
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -U pip setuptools wheel
+python -m pip install -U pip
 
-./scripts/install_textworld_with_cached_inform7.sh
-python -m pip install alfworld
+sha256sum -c vendor/textworld/textworld-1.7.0-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.sha256
+python -m pip install --no-index --no-deps vendor/textworld/textworld-1.7.0-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 ```
 
-The script clones `microsoft/TextWorld`, copies the cached Inform7 archive into
-`TextWorld/textworld/thirdparty/`, then installs `TextWorld[pddl]` from the local
-source checkout.
+Use `--no-deps` when TextWorld's Python dependencies are already installed on
+the target environment.
 
-If you already have a TextWorld source checkout:
-
-```bash
-TEXTWORLD_DIR=/path/to/TextWorld ./scripts/install_textworld_with_cached_inform7.sh
-```
-
-## Manual Steps
+For a fully offline install including dependencies, put all dependency wheels in
+`vendor/textworld/` as well, then install with:
 
 ```bash
-git clone https://github.com/microsoft/TextWorld.git
-cp vendor/textworld/I7_6M62_Linux_all.tar.gz TextWorld/textworld/thirdparty/
-python -m pip install "./TextWorld[pddl]"
+python -m pip install --no-index --find-links vendor/textworld textworld==1.7.0
 ```
