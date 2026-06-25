@@ -1,45 +1,61 @@
-# TextWorld Linux wheel cache
+# TextWorld aarch64 offline bundle
 
-This repository caches the TextWorld Python package wheel for offline Linux
-installation.
+This repository caches the packages needed to install TextWorld 1.7.0 on an
+offline Linux aarch64 server with Python 3.11.
+
+PyPI only publishes TextWorld's prebuilt Linux wheel for x86_64. For aarch64,
+this bundle installs TextWorld from source and uses a local wheelhouse for its
+Python dependencies.
+
+## Important limitation
+
+TextWorld's upstream source install runs `setup.sh`, which installs Inform7.
+The Inform7 6M62 Linux archive does not contain `aarch64` compiler binaries, so
+the upstream install cannot complete unchanged on aarch64.
+
+The included installer patches TextWorld setup locally to skip Inform7 on
+aarch64. This is enough for importing TextWorld and using Jericho-backed
+existing games, but TextWorld game generation through Inform7 is not available
+on this platform.
 
 ## Files
 
 ```text
-vendor/textworld/textworld-1.7.0-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+vendor/textworld/wheelhouse/
+scripts/install_textworld_aarch64_offline.sh
 ```
 
-SHA256:
+`vendor/textworld/wheelhouse/SHA256SUMS` contains checksums for the cached
+source packages and wheels.
 
-```text
-ca7486cff540c4d90865c54a3465e948c2790357aa78ad64de4406387854cbc8
+## Install on the offline aarch64 server
+
+System prerequisites must already be installed on the server:
+
+```bash
+sudo apt install build-essential python3.11 python3.11-venv python3.11-dev
 ```
 
-The wheel is the TextWorld 1.7.0 Linux x86_64 prebuilt package from PyPI. It
-requires Python 3.9 or newer.
-
-## Offline install
-
-On the target Linux machine:
+Then install from this repository without network access:
 
 ```bash
 git clone https://github.com/wind-wing234/verl-temp.git
 cd verl-temp
 
-python -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U pip
 
-sha256sum -c vendor/textworld/textworld-1.7.0-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.sha256
-python -m pip install --no-index --no-deps vendor/textworld/textworld-1.7.0-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+sha256sum -c vendor/textworld/wheelhouse/SHA256SUMS
+bash scripts/install_textworld_aarch64_offline.sh
 ```
 
-Use `--no-deps` when TextWorld's Python dependencies are already installed on
-the target environment.
-
-For a fully offline install including dependencies, put all dependency wheels in
-`vendor/textworld/` as well, then install with:
+Verify:
 
 ```bash
-python -m pip install --no-index --find-links vendor/textworld textworld==1.7.0
+python - <<'PY'
+import textworld
+import jericho
+print(textworld.__version__)
+print(jericho.__version__)
+PY
 ```
